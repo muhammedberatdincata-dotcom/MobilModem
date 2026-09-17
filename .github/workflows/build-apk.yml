@@ -1,4 +1,4 @@
-name: Build & Release MobilModem APK
+name: Build MobilModem Android APK
 
 on:
   push:
@@ -10,10 +10,11 @@ permissions:
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
     - name: Set up JDK 17
@@ -25,35 +26,38 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Build Debug APK
-      run: |
-        cd android
-        if [ ! -f "gradlew" ]; then
-          gradle wrapper
-        fi
-        chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
-        cp app/build/outputs/apk/debug/app-debug.apk ../MobilModem.apk
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+      with:
+        gradle-version: '8.4'
 
-    - name: Upload Artifact
+    - name: Build APK with Gradle
+      working-directory: ./android
+      run: |
+        gradle assembleDebug --no-daemon --stacktrace
+
+    - name: Copy Built APK
+      run: |
+        mkdir -p release_output
+        find android/app/build/outputs/apk/ -name "*.apk" -exec cp {} release_output/MobilModem.apk \;
+
+    - name: Upload APK to Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: MobilModem-APK
-        path: MobilModem.apk
+        name: MobilModem-Android-APK
+        path: release_output/MobilModem.apk
+        retention-days: 30
 
-    - name: Create GitHub Release (Direct Download Link)
+    - name: Publish to GitHub Releases
       uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
       with:
-        tag_name: v1.0.0
-        name: "MobilModem v1.0.0 (Otomatik Sürüm)"
+        tag_name: latest-apk
+        name: "MobilModem Android APK (En Son Sürüm)"
         body: |
-          ### 📱 MobilModem Android İstemcisi
-          Aşağıdaki doğrudan bağlantıya tıklayarak telefonunuza hemen kurabilirsiniz.
+          ### 📱 MobilModem Android Uygulaması
+          Aşağıdaki doğrudan bağlantıya tıklayarak telefonunuza hemen indirebilirsiniz:
           - **Tethering / Hotspot Kota Koruması:** %100 Bypass
           - **Çift Mod:** USB Ultra Hız + Wi-Fi Direct P2P
-        files: MobilModem.apk
-        draft: false
-        prerelease: false
+        files: release_output/MobilModem.apk
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
