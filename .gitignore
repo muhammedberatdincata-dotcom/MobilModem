@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+
+# Android & Gradle
+.gradle/
+build/
+android/app/build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+
+# Temporary & Large Binaries
+dist/MobilModem.pdb
+dist/MobilModem.exe
+dist/*.zip
+dist/pt_extracted/
+
+android.rar
+

@@ -1,0 +1,59 @@
+name: Build & Release MobilModem APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Build Debug APK
+      run: |
+        cd android
+        if [ ! -f "gradlew" ]; then
+          gradle wrapper
+        fi
+        chmod +x gradlew
+        ./gradlew assembleDebug --stacktrace
+        cp app/build/outputs/apk/debug/app-debug.apk ../MobilModem.apk
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MobilModem-APK
+        path: MobilModem.apk
+
+    - name: Create GitHub Release (Direct Download Link)
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/heads/main') || startsWith(github.ref, 'refs/heads/master')
+      with:
+        tag_name: v1.0.0
+        name: "MobilModem v1.0.0 (Otomatik Sürüm)"
+        body: |
+          ### 📱 MobilModem Android İstemcisi
+          Aşağıdaki doğrudan bağlantıya tıklayarak telefonunuza hemen kurabilirsiniz.
+          - **Tethering / Hotspot Kota Koruması:** %100 Bypass
+          - **Çift Mod:** USB Ultra Hız + Wi-Fi Direct P2P
+        files: MobilModem.apk
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
