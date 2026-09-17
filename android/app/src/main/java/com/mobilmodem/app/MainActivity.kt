@@ -196,7 +196,7 @@ fun MobilModemDashboard() {
                 selectedTabIndex = if (selectedMode == TunnelServerService.MODE_USB) 0 else 1,
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier.clip(RoundedCornerShape(12.dp))
             ) {
                 Tab(
                     selected = selectedMode == TunnelServerService.MODE_USB,
